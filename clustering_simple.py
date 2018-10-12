@@ -1,95 +1,36 @@
 import csv
 import pylab as pl
-import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-import pandas
-# https://www.dataquest.io/blog/machine-learning-python/
+import matplotlib.pyplot as plt
 
-
-class Session:
-    """class for sessions"""
-
-    def __init__(self, sessionID, numOfRequests, duration, averageTime, standardDeviation, repeated, http0, http2, http3, http4, http5, http7,
-                 percentage_pdf, uniqueContent, multiCountries, webService, human, robot):
-
-        # simple features
-        self.sessionID = sessionID
-        self.numOfRequests = numOfRequests
-        self.duration = duration
-        self.averageTime = averageTime
-        self.standardDeviation = standardDeviation
-        self.repeated = repeated
-        self.http0 = http0
-        self.http2 = http2
-        self.http3 = http3
-        self.http4 = http4
-        self.http5 = http5
-        self.http7 = http7
-        self.percentage_pdf = percentage_pdf
-        self.uniqueContent = uniqueContent
-        self.multiCountries = multiCountries
-        self.webService = webService
-        self.human = human
-        self.robot = robot
-
-
-unlabeled = pandas.read_csv("simple_features.csv", dtype={'SessionID': int, '#Requests': int, 'Duration': int, 'AverageTime': np.float64, 'StandardDeviation': np.float64, 'Repeated': np.float64, 'HTTP0': np.float64, 'HTTP2': np.float64, 'HTTP3': np.float64, 'HTTP4': np.float64, 'HTTP5': np.float64, 'HTTP7': np.float64, '%PDF': np.float64, 'UniqueContent': int, 'MultiCountries': int, 'WebService': int, 'Human': int, 'Robot': int})
-unlabeled = unlabeled[(unlabeled["Robot"] == 0) & (unlabeled["Human"] == 0)]
-# unlabeled = pandas.Series(pandas.concat(((chunck_df['Robot'] == 0) & (chunck_df['Human'] == 0))
-  #                        for chunck_df in pandas.read_csv('simple_features.csv', delimiter=',', chunksize=10000, dtype={'SessionID': int, '#Requests': int, 'Duration': int, 'AverageTime': float, 'StandardDeviation': float, 'Repeated': float, 'HTTP0': float, 'HTTP2': float, 'HTTP3': float, 'HTTP4': float, 'HTTP5': float, 'HTTP7': float, '%PDF': float, 'UniqueContent': int, 'MultiCountries': int, 'WebService': int, 'Human': int, 'Robot': int})))
-
-# unlabeled = unlabeled[unlabeled.columns.difference(['SessionID', 'Human', 'Robot'])]
-# unlabeled = pandas.DataFrame(data=unlabeled, columns=['SessionID', '#Requests', 'Duration', 'AverageTime', 'StandardDeviation',
-                                                     # 'Repeated', 'HTTP0', 'HTTP2', 'HTTP3', 'HTTP4', 'HTTP5', 'HTTP7', '%PDF', 'UniqueContent', 'MultiCountries', 'WebService', 'Human', 'Robot'])
-unlabeled.drop(['SessionID', 'Human', 'Robot'], 1, inplace=True)
-# print(unlabeled)
 with open('simple_features.csv') as simplefile:
     print("SIMPLE FEATURES")
-    # in case of a header
-    has_header = csv.Sniffer().has_header(simplefile.readline())
-    simplefile.seek(0)
-    readSimple = csv.reader(simplefile, delimiter=',')
-    if has_header:
-        next(readSimple)
 
-    sessions = []
-    for simple_row in readSimple:
-        session = Session(simple_row[0], int(simple_row[1]), int(simple_row[2]), float(simple_row[3]), float(simple_row[4]),
-                          float(simple_row[5]), float(simple_row[6]), float(simple_row[7]), float(simple_row[8]),
-                          float(simple_row[9]), float(simple_row[10]), float(simple_row[11]), float(simple_row[12]),
-                          int(simple_row[13]), int(simple_row[14]), int(simple_row[15]), int(simple_row[16]), int(simple_row[17]))
-        sessions.append(session)
-# , dtype={'SessionID': int, '#Requests': int, 'Duration': int, 'AverageTime': float, 'StandardDeviation': float, 'Repeated': float, 'HTTP0': float, 'HTTP2': float, 'HTTP3': float, 'HTTP4': float, 'HTTP5': float, 'HTTP7': float, '%PDF': float, 'UniqueContent': int, 'MultiCountries': int, 'WebService': int, 'Human': int, 'Robot': int}))
-    # unlabeled = pandas.concat(((chunck_df['Robot'] == 0) & (chunck_df['Human'] == 0))
-                           #   for chunck_df in pandas.read_csv('simple_features.csv', chunksize=10000))
-    # unlabeled = unlabeled[unlabeled['Human'] == 0 and unlabeled['Robot'] == 0]
-    # unlabeled = unlabeled.drop(['SessionID', 'Human', 'Robot'], 0, inplace=True)
-    # unlabeled = unlabeled[unlabeled.columns.difference(['SessionID', 'Human', 'Robot'])]
-    # unlabeled = []
+    read_simple = csv.DictReader(simplefile)
+
     labeled = []
     labeled_robots = []
+    labeled_index = []
     humans = robots = 0
-    for ses in sessions:
-        #if ses.human == 0 and ses.robot == 0:
-            # 2d matrix where every column is a feature and every line is an unlabeled session
-            #unlabeled.append([ses.numOfRequests, ses.duration, ses.averageTime, ses.standardDeviation, ses.repeated, ses.http0,
-                             # ses.http2, ses.http3, ses.http4, ses.http5, ses.http7, ses.percentage_pdf, ses.uniqueContent,
-                             # ses.multiCountries, ses.webService])
-
-        if ses.human == 1 or ses.robot == 1:
-            if ses.human == 1:
+    for index, simple_row in enumerate(read_simple, start=0):
+        if int(simple_row["Human"]) == 1 or int(simple_row["Robot"]) == 1:
+            if int(simple_row["Human"]) == 1:
                 humans = humans + 1
-            if ses.robot == 1:
+            if int(simple_row["Robot"]) == 1:
                 robots = robots + 1
-                # 2d matrix where every column is a feature and every line is a labeled session
-            labeled_robots.append(ses.robot)
-            labeled.append([ses.numOfRequests, ses.duration, ses.averageTime, ses.standardDeviation, ses.repeated, ses.http0,
-                            ses.http2, ses.http3, ses.http4, ses.http5, ses.http7, ses.percentage_pdf, ses.uniqueContent,
-                            ses.multiCountries, ses.webService])
+
+            labeled_index.append(index)
+            labeled_robots.append(int(simple_row["Robot"]))
+
+            labeled.append([int(simple_row["#Requests"]), int(simple_row["Duration"]), float(simple_row["AverageTime"]), float(simple_row["StandardDeviation"]),
+                           float(simple_row["Repeated"]), float(simple_row["HTTP0"]), float(simple_row["HTTP2"]), float(simple_row["HTTP3"]),
+                           float(simple_row["HTTP4"]), float(simple_row["HTTP5"]), float(simple_row["HTTP7"]), float(simple_row["%PDF"]),
+                           int(simple_row["UniqueContent"]), int(simple_row["MultiCountries"]), int(simple_row["WebService"])])
 
     print("actual number of humans:", humans)
     print("actual number of robots:", robots)
+
     # Fitting with inputs
     kmeans = KMeans(n_clusters=2).fit(labeled)
     # Predicting the clusters
@@ -97,7 +38,6 @@ with open('simple_features.csv') as simplefile:
     # Getting the cluster centers
     C = kmeans.cluster_centers_
     print("centers for two clusters (labeled): ", C)
-    print("labels: ", labels)
     c0 = c1 = 0
     r0 = r1 = 0
     for i in range(0, len(labeled)):
@@ -116,24 +56,6 @@ with open('simple_features.csv') as simplefile:
     print("robots in second cluster: ", r1)
     print("percentage of robots in first cluster: ", (r0 / c0) * 100, "%")
     print("percentage of robots in second cluster: ", (r1 / c1) * 100, "%")
-
-    # Fitting with inputs
-    # kmeans = KMeans(n_clusters=2).fit(unlabeled)
-    # Predicting the clusters
-    # labels = kmeans.predict(unlabeled)
-    # Getting the cluster centers
-    # C_unlabeled = kmeans.cluster_centers_
-    # print("centers for two clusters (unlabeled): ", C_unlabeled)
-    # c_u0 = c_u1 = i = 0
-    # for u in unlabeled:
-        # if kmeans.labels_[i] == 1:
-            # c_u1 = c_u1 + 1
-        # if kmeans.labels_[i] == 0:
-            # c_u0 = c_u0 + 1
-        # i = i + 1
-
-    # print("sessions in first cluster: ", c_u0)
-    # print("sessions in second cluster: ", c_u1)
 
     # find "natural" k, where the score for k clusters doesn't have a big difference form the score for k+1 clusters
     N = range(1, 20)
@@ -156,28 +78,15 @@ with open('simple_features.csv') as simplefile:
     counter = [0] * 5
     robot_counter = [0] * 5
     for i in range(0, len(labeled)):
-        for j in range(0, 5):
-            if kmeans5.labels_[i] == j:
-                counter[j] += 1  # j-th cluster counter
-                if labeled_robots[i] == 1:
-                    robot_counter[j] += 1  # robots in j-th cluster counter
+        counter[kmeans5.labels_[i]] += 1  # cluster counter
+        if labeled_robots[i] == 1:
+                robot_counter[kmeans5.labels_[i]] += 1  # counter for robots in cluster
 
     for i in range(0, 5):
         print("sessions in cluster ", i + 1, " : ", counter[i])
         print("robots in cluster ", i + 1, " : ", robot_counter[i])
         print("percentage of robots in cluster ", i + 1, " : ", (robot_counter[i] / counter[i]) * 100, "%")
 
-    # find "natural" k, where the score for k clusters doesn't have a big difference form the score for k+1 clusters
-    # N = range(1, 10)
-    # kmeans_unlabeled = [KMeans(n_clusters=i) for i in N]
-    # score = [kmeans_unlabeled[i].fit(unlabeled).score(unlabeled) for i in range(len(kmeans_unlabeled))]
-    # pl.plot(N, score)
-    # pl.xlabel('Number of Clusters')
-    # pl.ylabel('Score')
-    # pl.title('Elbow Curve')
-    # pl.show()
-
-    # Create a PCA model.
     pca_2 = PCA(2)
     # Fit the PCA model on the numeric columns from earlier.
     plot_labeled = pca_2.fit_transform(labeled)
@@ -186,10 +95,107 @@ with open('simple_features.csv') as simplefile:
     # Show the plot.
     pl.show()
 
-    pca_2 = PCA(2)
     # Fit the PCA model on the numeric columns from earlier.
     plot_labeled = pca_2.fit_transform(labeled)
     # Make a scatter plot of each labeled session, shaded according to cluster assignment.
     pl.scatter(x=plot_labeled[:, 0], y=plot_labeled[:, 1], c=labels5)
     # Show the plot.
     pl.show()
+
+    duration = []
+    average_time = []
+    standard_deviation = []
+    numOfRequests = []
+    unique_content = []
+    duration_all = []
+    average_time_all = []
+    standard_deviation_all = []
+    numOfRequests_all = []
+    unique_content_all = []
+
+    for i in range(0, 5):
+        for j, l in enumerate(labeled, start=0):
+            if i == 0:
+                duration_all.append(l[1])
+                average_time_all.append(l[2])
+                standard_deviation_all.append(l[3])
+                numOfRequests_all.append(l[0])
+                unique_content_all.append(l[12])
+            if kmeans5.labels_[j] == i:
+                duration.append(l[1])
+                average_time.append(l[2])
+                standard_deviation.append(l[3])
+                numOfRequests.append(l[0])
+                unique_content.append(l[12])
+
+        # Draw the plot
+        plt.subplot(1, 2, 1)
+        plt.title('distribution of duration for cluster {i} '.format(i=i+1))
+        plt.hist(duration_all, color='red', bins=50, range=(0, 5000), label='all', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.subplot(1, 2, 2)
+        plt.hist(duration, color='blue', bins=50, label='cluster', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.savefig("official_full_range_duration{i}.png".format(i=i+1), bbox_inches='tight')
+        plt.show()
+
+        plt.subplot(1, 2, 1)
+        plt.title('distribution of average time for cluster {i} '.format(i=i+1))
+        plt.hist(average_time_all, color='red', bins=50, range=(0, 2500), label='all', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.subplot(1, 2, 2)
+        plt.hist(average_time, color='blue', bins=50, label='cluster', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.savefig("official_full_range_average_time{i}.png".format(i=i+1), bbox_inches='tight')
+        plt.show()
+
+        plt.subplot(1, 2, 1)
+        plt.title('distribution of standard deviation for cluster {i} '.format(i=i+1))
+        plt.hist(standard_deviation_all, color='red', bins=50, range=(0, 2500), label='all', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.subplot(1, 2, 2)
+        plt.hist(standard_deviation, color='blue', bins=50, label='cluster', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.savefig("official_full_range_standard_deviation{i}.png".format(i=i+1), bbox_inches='tight')
+        plt.show()
+
+        plt.subplot(1, 2, 1)
+        plt.title('distribution of number of requests for cluster {i} '.format(i=i+1))
+        plt.hist(numOfRequests_all, color='red', bins=50, range=(0, 150), label='all', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.subplot(1, 2, 2)
+        plt.hist(numOfRequests, color='blue', bins=50, label='cluster', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.savefig("official_full_range_numOfRequests{i}.png".format(i=i+1), bbox_inches='tight')
+        plt.show()
+
+        plt.subplot(1, 2, 1)
+        plt.title('distribution of unique content for cluster {i} '.format(i=i+1))
+        plt.hist(unique_content_all, color='red', bins=50, range=(0, 100), label='all', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.subplot(1, 2, 2)
+        plt.hist(unique_content, color='blue', bins=50, label='cluster', edgecolor='black')
+        plt.legend(loc='upper right')
+        plt.savefig("official_full_range_unique_content{i}.png".format(i=i + 1), bbox_inches='tight')
+        plt.show()
+
+        print("min duration in cluster ", i+1, ": ", min(duration))
+        print("max duration in cluster ", i+1, ": ", max(duration))
+        print("range: ", max(duration) - min(duration))
+        print("min average time in cluster ", i + 1, ": ", min(average_time))
+        print("max average time in cluster ", i + 1, ": ", max(average_time))
+        print("range: ", max(average_time) - min(average_time))
+        print("min standard_deviation in cluster ", i + 1, ": ", min(standard_deviation))
+        print("max standard_deviation in cluster ", i + 1, ": ", max(standard_deviation))
+        print("range: ", max(standard_deviation) - min(standard_deviation))
+        print("min numOfRequests in cluster ", i + 1, ": ", min(numOfRequests))
+        print("max numOfRequests in cluster ", i + 1, ": ", max(numOfRequests))
+        print("range: ", max(numOfRequests) - min(numOfRequests))
+        print("min unique content in cluster ", i + 1, ": ", min(unique_content))
+        print("max unique content in cluster ", i + 1, ": ", max(unique_content))
+        print("range: ", max(unique_content) - min(unique_content))
+        duration[:] = []
+        average_time[:] = []
+        standard_deviation[:] = []
+        numOfRequests[:] = []
+        unique_content[:] = []
