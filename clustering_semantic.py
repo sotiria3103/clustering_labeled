@@ -4,14 +4,15 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
+from my_functions import cluster2, find_k, cluster_k, pca
+
 with open('semantic_features.csv') as semanticfile:
     print("SEMANTIC FEATURES")
 
     read_semantic = csv.DictReader(semanticfile)
 
-    labeled = []
+    labeled_sessions = []
     labeled_robots = []
-    labeled_index = []
     humans = robots = 0
     for index, semantic_row in enumerate(read_semantic, start=0):
         if int(semantic_row["Human"]) == 1 or int(semantic_row["Robot"]) == 1:
@@ -20,88 +21,21 @@ with open('semantic_features.csv') as semanticfile:
             if int(semantic_row["Robot"]) == 1:
                 robots = robots + 1
 
-            labeled_index.append(index)
             labeled_robots.append(int(semantic_row["Robot"]))
 
-            labeled.append([int(semantic_row["Total_Topics"]), int(semantic_row["Unique_Topics"]), float(semantic_row["Unique_Percentage"]),
-                            float(semantic_row["Variance"]), float(semantic_row["Variance_Probabilistic"])])
+            labeled_sessions.append([int(semantic_row["Total_Topics"]), int(semantic_row["Unique_Topics"]), float(semantic_row["Unique_Percentage"]),
+                                     float(semantic_row["Variance"]), float(semantic_row["Variance_Probabilistic"])])
 
     print("actual number of humans:", humans)
     print("actual number of robots:", robots)
 
-    # Fitting with inputs
-    kmeans = KMeans(n_clusters=2).fit(labeled)
-    # Predicting the clusters
-    labels = kmeans.predict(labeled)
-    # Getting the cluster centers
-    C = kmeans.cluster_centers_
-    print("centers for two clusters (labeled): ", C)
-    c0 = c1 = 0
-    r0 = r1 = 0
-    for i in range(0, len(labeled)):
-        if kmeans.labels_[i] == 0:
-            c0 += 1  # first cluster counter
-            if labeled_robots[i] == 1:
-                r0 += 1  # robots in first cluster counter
-        if kmeans.labels_[i] == 1:
-            c1 += 1  # second cluster counter
-            if labeled_robots[i] == 1:
-                r1 += 1  # robots in second cluster counter
+    labels2 = cluster2(labeled_sessions, labeled_robots)
 
-    print("sessions in first cluster: ", c0)
-    print("sessions in second cluster: ", c1)
-    print("robots in first cluster: ", r0)
-    print("robots in second cluster: ", r1)
-    print("percentage of robots in first cluster: ", (r0 / c0) * 100, "%")
-    print("percentage of robots in second cluster: ", (r1 / c1) * 100, "%")
+    find_k(labeled_sessions)
 
-    # find "natural" k, where the score for k clusters doesn't have a big difference from the score for k+1 clusters
-    N = range(1, 20)
-    kmeans_labeled = [KMeans(n_clusters=i) for i in N]
-    score = [kmeans_labeled[i].fit(labeled).score(labeled) for i in range(len(kmeans_labeled))]
-    pl.plot(N, score)
-    pl.xlabel('Number of Clusters')
-    pl.ylabel('Score')
-    pl.title('Elbow Curve')
-    pl.show()
+    labels6 = cluster_k(labeled_sessions, 6, labeled_robots)  # k = 6
 
-
-    # Fitting with inputs
-    kmeans6 = KMeans(n_clusters=6).fit(labeled) # k=6
-    # Predicting the clusters
-    labels6 = kmeans6.predict(labeled)
-    # Getting the cluster centers
-    C = kmeans6.cluster_centers_
-    print("centers for six clusters: ", C)
-
-    counter = [0] * 6
-    robot_counter = [0] * 6
-    for i in range(0, len(labeled)):
-        counter[kmeans6.labels_[i]] += 1  # cluster counter
-        if labeled_robots[i] == 1:
-                robot_counter[kmeans6.labels_[i]] += 1  # counter for robots in cluster
-
-    for i in range(0, 6):
-        print("sessions in cluster ", i + 1, " : ", counter[i])
-        print("robots in cluster ", i + 1, " : ", robot_counter[i])
-        print("percentage of robots in cluster ", i + 1, " : ", (robot_counter[i] / counter[i]) * 100, "%")
-
-    # Create a PCA model.
-    pca_2 = PCA(2)
-    # Fit the PCA model on the numeric columns from earlier.
-    plot_labeled = pca_2.fit_transform(labeled)
-    # Make a scatter plot of each labeled session, shaded according to cluster assignment.
-    pl.scatter(x=plot_labeled[:, 0], y=plot_labeled[:, 1], c=labels)
-    # Show the plot.
-    pl.show()
-
-    # Fit the PCA model on the numeric columns from earlier.
-    plot_labeled = pca_2.fit_transform(labeled)
-    plot_c = pca_2.fit_transform(C)
-    # Make a scatter plot of each labeled session, shaded according to cluster assignment.
-    pl.scatter(x=plot_labeled[:, 0], y=plot_labeled[:, 1], c=labels6)
-    # Show the plot.
-    pl.show()
+    pca(labeled_sessions, labels2, labels6)
 
     total_topics = []
     unique_topics = []
@@ -109,11 +43,11 @@ with open('semantic_features.csv') as semanticfile:
     unique_topics_all = []
 
     for i in range(0, 6):
-        for j, l in enumerate(labeled, start=0):
+        for j, l in enumerate(labeled_sessions, start=0):
             if i == 0:
                 total_topics_all.append(l[0])
                 unique_topics_all.append(l[1])
-            if kmeans6.labels_[j] == i:
+            if labels6[j] == i:
                 total_topics.append(l[0])
                 unique_topics.append(l[1])
 
