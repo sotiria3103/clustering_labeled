@@ -1,4 +1,4 @@
-SessionID,#Requests,Duration,AverageTime,StandardDeviation,Repeated,HTTP0,HTTP2,HTTP3,HTTP4,HTTP5,HTTP7%PDF,UniqueContent,MultiCountries,WebService,Human,Robot
+SessionID,#Requests,Duration,AverageTime,StandardDeviation,Repeated,HTTP0,HTTP2,HTTP3,HTTP4,HTTP5,HTTP7,%PDF,UniqueContent,MultiCountries,WebService,Human,Robot
 3,3,73,36.0,26.0,0.0,0.6666,0.333,0.0,0.0,0.0,0.0,0.3333,2,0,0,0,0
 4,5,225,56.0,81.667,0.2,0.4,0.2,0.0,0.4,0.0,0.0,0.6,1,0,0,0,0
 6,10,6791,753.44,546.568,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.4,10,0,0,0,1
